@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🐝 Spelling Bee - Practica tus 45 palabras</title>
+<meta name="description" content="App para practicar la pronunciación, el deletreo y el abecedario en inglés.">
+<style>
+/* ============================================================
+   ESTILOS
+   Paleta "abeja": amarillo/naranja + acentos morados.
+   Todo con tipografía del sistema (sin fuentes externas).
+   ============================================================ */
+:root{
+  --amarillo:#ffc93c;
+  --naranja:#ff8a3d;
+  --morado:#6c4bb6;
+  --morado-claro:#8a6ad4;
+  --verde:#22b573;
+  --verde-suave:#e7f9f0;
+  --rojo:#e5484d;
+  --rojo-suave:#fdecec;
+  --texto:#2c2440;
+  --gris:#6b6580;
+  --tarjeta:#ffffff;
+  --radio:22px;
+  --sombra:0 10px 30px rgba(44,36,64,.14);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  font-family:"Segoe UI Variable Display","Segoe UI",system-ui,-apple-system,"Trebuchet MS",Arial,sans-serif;
+  color:var(--texto);
+  background:linear-gradient(160deg,#fff6d9 0%,#ffe6c7 45%,#e9dcff 100%);
+  background-attachment:fixed;
+  min-height:100vh;
+  padding:16px 14px 40px;
+  font-size:18px;
+  line-height:1.45;
+  -webkit-text-size-adjust:100%;
+}
+
+/* ---------- Layout: contenido + panel del abecedario al lado ---------- */
+.layout{
+  display:flex;
+  gap:18px;
+  justify-content:center;
+  align-items:flex-start;
+  max-width:1010px;
+  margin:0 auto;
+}
+.contenedor{flex:1 1 auto;max-width:720px;min-width:0;}
+
+/* ---------- Encabezado ---------- */
+header{text-align:center;margin-bottom:18px;}
+h1{
+  font-size:clamp(1.7rem,7vw,2.6rem);
+  margin:.2em 0 .1em;
+  color:var(--morado);
+  letter-spacing:-.5px;
+}
+.subtitulo{margin:0;color:var(--gris);font-size:clamp(.95rem,3.6vw,1.1rem);}
+
+/* ---------- Tarjetas ---------- */
+.tarjeta{
+  background:var(--tarjeta);
+  border-radius:var(--radio);
+  box-shadow:var(--sombra);
+  padding:22px 18px;
+  margin-bottom:16px;
+}
+
+/* ---------- Botones ---------- */
+button{
+  font-family:inherit;
+  font-size:1.05rem;
+  font-weight:700;
+  min-height:56px;
+  padding:14px 22px;
+  border:none;
+  border-radius:999px;
+  cursor:pointer;
+  color:#fff;
+  background:var(--morado);
+  box-shadow:0 4px 0 rgba(0,0,0,.14);
+  touch-action:manipulation;
+  transition:transform .08s ease, filter .15s ease, background .15s ease;
+}
+button:hover{filter:brightness(1.06);}
+button:active{transform:translateY(2px) scale(.98);box-shadow:0 2px 0 rgba(0,0,0,.14);}
+button:focus-visible{outline:4px solid var(--morado-claro);outline-offset:3px;}
+button[disabled]{opacity:.45;cursor:not-allowed;box-shadow:none;}
+.btn-grande{width:100%;font-size:1.3rem;min-height:70px;}
+.btn-amarillo{background:var(--amarillo);color:#4a3800;}
+.btn-naranja{background:var(--naranja);}
+.btn-verde{background:var(--verde);}
+.btn-claro{background:#f0edfa;color:var(--morado);box-shadow:0 4px 0 rgba(108,75,182,.18);}
+.btn-mini{min-height:42px;padding:6px 16px;font-size:.92rem;}
+.fila-botones{display:flex;flex-wrap:wrap;gap:10px;}
+.fila-botones button{flex:1 1 160px;}
+.fila-derecha{display:flex;justify-content:flex-end;margin-bottom:6px;}
+
+/* ---------- Selector de nivel (pantalla de inicio) ---------- */
+.nivel-titulo{font-weight:800;text-align:center;margin:14px 0 8px;}
+.btn-nivel{background:#f0edfa;color:var(--morado);box-shadow:0 4px 0 rgba(108,75,182,.18);}
+.btn-nivel.activo{background:var(--morado);color:#fff;box-shadow:0 4px 0 rgba(0,0,0,.18);}
+.nivel-desc{text-align:center;color:var(--gris);font-size:.92rem;margin:10px 0 0;min-height:2.6em;}
+
+/* ---------- Marcador ---------- */
+.marcador{
+  display:flex;flex-wrap:wrap;gap:8px;justify-content:center;
+  margin-bottom:14px;
+}
+.marcador div{
+  background:#fff;border-radius:14px;padding:8px 12px;
+  box-shadow:0 3px 10px rgba(44,36,64,.10);
+  font-weight:700;font-size:1rem;white-space:nowrap;
+}
+.progreso-texto{text-align:center;color:var(--gris);font-weight:700;margin:0 0 8px;}
+.barra{background:#eae4f7;border-radius:999px;height:14px;overflow:hidden;margin-bottom:18px;}
+.barra span{display:block;height:100%;width:0;border-radius:999px;
+  background:linear-gradient(90deg,var(--amarillo),var(--naranja));transition:width .3s ease;}
+
+/* ---------- Zona de escucha ---------- */
+.instruccion{text-align:center;font-size:1.15rem;font-weight:700;margin:0 0 14px;}
+.abeja{font-size:3.2rem;text-align:center;display:block;margin-bottom:6px;}
+.abeja.animada{animation:flotar 2.2s ease-in-out infinite;}
+@keyframes flotar{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+
+/* ---------- Palabra visible (nivel Fácil) ---------- */
+#zona-palabra{
+  background:#fbfaff;border:3px dashed #e2d8f8;border-radius:18px;
+  padding:10px 8px 12px;margin-bottom:14px;
+}
+.palabra-grande{
+  font-size:clamp(1.5rem,6.5vw,2.3rem);font-weight:800;text-align:center;
+  color:var(--morado);margin:4px 0 6px;word-break:break-word;
+}
+.aviso-examen{text-align:center;color:var(--gris);font-weight:700;margin:6px 0 14px;}
+
+/* ---------- Input ---------- */
+label.etiqueta{display:block;font-weight:700;margin:18px 0 8px;text-align:center;}
+input[type="text"]{
+  width:100%;
+  font-family:inherit;
+  font-size:clamp(1.3rem,6vw,1.8rem);
+  font-weight:700;
+  text-align:center;
+  padding:16px 14px;
+  border:3px solid #ded6f2;
+  border-radius:18px;
+  background:#fbfaff;
+  color:var(--texto);
+}
+input[type="text"]:focus{outline:none;border-color:var(--morado-claro);background:#fff;}
+
+/* ---------- Feedback ---------- */
+.feedback{margin-top:16px;border-radius:18px;padding:16px;text-align:center;}
+.feedback:empty{display:none;}
+.feedback.bien{background:var(--verde-suave);border:3px solid var(--verde);animation:pop .35s ease;}
+.feedback.mal{background:var(--rojo-suave);border:3px solid var(--rojo);animation:temblar .4s ease;}
+.feedback .titulo-fb{font-size:1.35rem;font-weight:800;margin:0 0 8px;}
+.feedback.bien .titulo-fb{color:#12855a;}
+.feedback.mal .titulo-fb{color:#b3282d;}
+.feedback .nota{margin:8px 0 0;color:var(--gris);font-size:.98rem;}
+@keyframes pop{0%{transform:scale(.9)}60%{transform:scale(1.04)}100%{transform:scale(1)}}
+@keyframes temblar{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+
+/* ---------- Letras (deletreo en pantalla, con resaltado) ---------- */
+.letras{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:8px 0;}
+.letras .letra{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:2.1rem;padding:6px 8px;
+  background:#fff;border:2px solid var(--amarillo);border-radius:10px;
+  font-size:1.5rem;font-weight:800;
+  transition:transform .12s ease, background .12s ease, color .12s ease;
+}
+.letras .letra.mayus{background:var(--amarillo);color:#4a3800;}
+.letras .letra.espacio{border-style:dashed;border-color:var(--gris);color:var(--gris);}
+/* Letra que la voz está diciendo en este momento */
+.letras .letra.activa{
+  background:var(--naranja);border-color:var(--naranja);color:#fff;
+  transform:scale(1.16);box-shadow:0 5px 14px rgba(255,138,61,.45);
+}
+.letras.mini{gap:3px;margin:2px 0 4px;justify-content:flex-start;}
+.letras.mini .letra{min-width:1.25rem;padding:1px 4px;font-size:.9rem;border-width:1px;border-radius:6px;}
+.escribiste{font-size:1.05rem;color:var(--gris);word-break:break-word;}
+
+/* ---------- Panel del abecedario ---------- */
+#panel-abc{
+  flex:0 0 196px;
+  background:var(--tarjeta);
+  border-radius:var(--radio);
+  box-shadow:var(--sombra);
+  padding:14px 12px;
+  position:sticky;top:14px;
+}
+#panel-abc h2{margin:0 0 4px;font-size:1.05rem;text-align:center;color:var(--morado);}
+.abc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:10px 0;}
+.btn-letra{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+  min-height:52px;padding:6px 2px;line-height:1.1;border-radius:12px;
+  background:#f0edfa;color:var(--morado);box-shadow:0 3px 0 rgba(108,75,182,.18);
+}
+.btn-letra.activa{background:var(--naranja);color:#fff;transform:scale(1.1);}
+.abc-l{font-size:1.1rem;font-weight:800;}
+/* Cómo se pronuncia la letra: hereda el color del botón para seguir
+   legible cuando la letra está resaltada en naranja. */
+.abc-s{font-size:.62rem;font-weight:700;opacity:.75;letter-spacing:.2px;}
+#btn-abc{width:100%;min-height:50px;font-size:.95rem;padding:10px;}
+.abc-nota{margin:8px 0 0;font-size:.8rem;color:var(--gris);text-align:center;}
+
+/* ---------- Repaso libre ---------- */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;}
+.item{
+  background:#fff;border-radius:16px;padding:12px;
+  box-shadow:0 3px 12px rgba(44,36,64,.10);
+  display:flex;flex-direction:column;gap:6px;
+}
+.item .palabra{font-size:1.05rem;font-weight:800;word-break:break-word;}
+.item .acciones{display:flex;gap:8px;margin-top:auto;}
+.item .acciones button{flex:1;min-height:46px;padding:8px;font-size:1.1rem;}
+.buscador{margin-bottom:14px;}
+.buscador input{font-size:1.1rem;text-align:left;padding:12px 14px;}
+
+/* ---------- Resumen ---------- */
+.puntaje{font-size:clamp(2rem,10vw,3.2rem);font-weight:800;text-align:center;color:var(--morado);margin:.1em 0;}
+.lista-falladas{list-style:none;padding:0;margin:12px 0 0;}
+.lista-falladas li{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  background:#fff8f8;border:2px solid #f6d6d7;border-radius:14px;
+  padding:8px 12px;margin-bottom:8px;font-weight:700;
+}
+.lista-falladas button{min-height:44px;padding:6px 14px;font-size:1rem;}
+
+/* ---------- Varios ---------- */
+.aviso{background:#fff4d6;border:2px dashed var(--naranja);border-radius:16px;padding:12px;text-align:center;margin-bottom:14px;}
+.pie{text-align:center;color:var(--gris);font-size:.9rem;margin-top:10px;}
+.oculto{display:none !important;}
+.centrado{text-align:center;}
+
+/* ---------- Responsive: el abecedario pasa debajo del contenido ---------- */
+@media (max-width:899px){
+  .layout{flex-direction:column;align-items:stretch;}
+  .contenedor{max-width:none;}
+  #panel-abc{position:static;flex:1 1 auto;}
+  .abc-grid{grid-template-columns:repeat(auto-fill,minmax(62px,1fr));}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none !important;transition:none !important;}
+}
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <div class="contenedor">
+
+    <header>
+      <h1>🐝 Spelling Bee</h1>
+      <p class="subtitulo">Escucha, deletrea y gana rachas 🔥</p>
+    </header>
+
+    <!-- ============ PANTALLA: INICIO ============ -->
+    <section id="pantalla-inicio" class="tarjeta">
+      <span class="abeja animada">🐝</span>
+      <p class="instruccion">¡Hola! ¿Listo para practicar tus <span id="total-inicio">45</span> palabras?</p>
+      <div id="aviso-voz" class="aviso oculto">
+        ⚠️ Este navegador no puede leer en voz alta. Puedes practicar escribiendo,
+        pero para escuchar las palabras usa <strong>Chrome</strong> o <strong>Edge</strong>.
+      </div>
+
+      <p class="nivel-titulo">Elige el nivel:</p>
+      <div class="fila-botones">
+        <button id="btn-nivel-facil" class="btn-nivel">👀 Fácil</button>
+        <button id="btn-nivel-examen" class="btn-nivel">🎤 Examen</button>
+      </div>
+      <p id="nivel-desc" class="nivel-desc"></p>
+
+      <p class="centrado" style="color:var(--gris)">🔈 Sube el volumen antes de empezar.</p>
+      <div style="display:flex;flex-direction:column;gap:12px;margin-top:8px">
+        <button id="btn-ir-practica" class="btn-grande btn-amarillo">🎤 Practicar deletreo</button>
+        <button id="btn-ir-repaso" class="btn-grande btn-claro">📖 Repaso libre</button>
+      </div>
+    </section>
+
+    <!-- ============ PANTALLA: PRACTICAR DELETREO ============ -->
+    <section id="pantalla-practica" class="oculto">
+      <div class="marcador" id="marcador">
+        <div>✅ <span id="m-aciertos">0</span></div>
+        <div>❌ <span id="m-fallos">0</span></div>
+        <div>🔥 <span id="m-racha">0</span></div>
+        <div>🏆 <span id="m-mejor">0</span></div>
+      </div>
+
+      <div class="tarjeta">
+        <p class="progreso-texto">Palabra <span id="p-actual">1</span> de <span id="p-total">45</span></p>
+        <div class="barra"><span id="barra-relleno"></span></div>
+
+        <div class="fila-derecha">
+          <button id="btn-toggle-nivel" class="btn-claro btn-mini">👀 Fácil</button>
+        </div>
+
+        <span class="abeja" id="abeja-practica">🐝</span>
+        <p class="instruccion" id="instruccion-practica">Escucha la palabra y escríbela 👇</p>
+
+        <!-- La palabra se ve sólo en nivel Fácil -->
+        <div id="zona-palabra">
+          <p id="palabra-texto" class="palabra-grande"></p>
+          <div id="palabra-letras"></div>
+        </div>
+        <p id="aviso-examen" class="aviso-examen oculto">🎤 Modo examen: escucha con mucha atención 👂</p>
+
+        <div class="fila-botones">
+          <button id="btn-escuchar" class="btn-amarillo">🔊 Escuchar</button>
+          <button id="btn-repetir" class="btn-claro">🔁 Repetir palabra</button>
+          <button id="btn-deletrear" class="btn-naranja">🔤 Deletrear letra por letra</button>
+        </div>
+
+        <!-- Escribir la palabra: sólo en nivel Examen -->
+        <div id="zona-escribir">
+          <label class="etiqueta" for="respuesta">Escribe la palabra:</label>
+          <input id="respuesta" type="text" inputmode="text"
+                 autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+                 placeholder="tu respuesta...">
+        </div>
+
+        <div class="fila-botones" style="margin-top:14px">
+          <button id="btn-comprobar" class="btn-verde">✔️ Comprobar</button>
+          <button id="btn-siguiente" class="oculto">Siguiente palabra ➡️</button>
+        </div>
+
+        <div id="feedback" class="feedback" aria-live="polite"></div>
+      </div>
+
+      <div class="fila-botones">
+        <button id="btn-salir-practica" class="btn-claro">🏠 Inicio</button>
+        <button id="btn-terminar" class="btn-claro">🏁 Ver resultados</button>
+      </div>
+    </section>
+
+    <!-- ============ PANTALLA: RESUMEN ============ -->
+    <section id="pantalla-resumen" class="oculto">
+      <div class="tarjeta centrado">
+        <span class="abeja" id="abeja-resumen">🏆</span>
+        <p class="instruccion" id="mensaje-resumen">¡Buen trabajo!</p>
+        <div id="bloque-puntaje">
+          <p class="puntaje"><span id="r-aciertos">0</span> / <span id="r-total">0</span></p>
+          <p style="color:var(--gris);margin-top:0">Mejor racha de la sesión: 🔥 <strong id="r-racha">0</strong></p>
+        </div>
+        <div id="bloque-falladas" class="oculto" style="text-align:left">
+          <p style="font-weight:800;margin-bottom:4px">Palabras para repasar:</p>
+          <ul id="lista-falladas" class="lista-falladas"></ul>
+        </div>
+        <div class="fila-botones" style="margin-top:18px">
+          <button id="btn-otra-vez" class="btn-amarillo">🔄 Practicar otra vez</button>
+          <button id="btn-repasar-falladas" class="btn-naranja oculto">🔁 Repasar solo las falladas</button>
+          <button id="btn-salir-resumen" class="btn-claro">🏠 Inicio</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ PANTALLA: REPASO LIBRE ============ -->
+    <section id="pantalla-repaso" class="oculto">
+      <div class="tarjeta">
+        <p class="instruccion">📖 Repaso libre — sin examen, solo escuchar</p>
+        <div class="buscador">
+          <label class="etiqueta" for="filtro" style="margin-top:0">Buscar palabra:</label>
+          <input id="filtro" type="text" autocomplete="off" spellcheck="false" placeholder="escribe para filtrar...">
+        </div>
+        <p class="centrado" style="color:var(--gris);font-size:.95rem">
+          🔊 = escuchar la palabra &nbsp;·&nbsp; 🔤 = deletrear letra por letra
+        </p>
+        <div id="grid-repaso" class="grid"></div>
+        <p id="sin-resultados" class="centrado oculto" style="color:var(--gris)">No hay palabras con ese texto 🤔</p>
+      </div>
+      <div class="fila-botones">
+        <button id="btn-salir-repaso" class="btn-claro">🏠 Inicio</button>
+      </div>
+    </section>
+
+    <p class="pie">Hecho con 💛 para practicar. Voz en inglés (en-US) del navegador.</p>
+  </div><!-- /.contenedor -->
+
+  <!-- ============ PANEL LATERAL: ABECEDARIO EN INGLÉS ============ -->
+  <aside id="panel-abc">
+    <h2>🔤 Abecedario</h2>
+    <p class="abc-nota">Toca una letra para escucharla. Debajo está cómo se lee.</p>
+    <div id="abc-grid" class="abc-grid"></div>
+    <button id="btn-abc" class="btn-naranja">🎵 Decir el abecedario</button>
+  </aside>
+
+</div><!-- /.layout -->
+
+<script>
+"use strict";
+(function(){
+
+/* ============================================================
+   1) LISTA DE PALABRAS
+   Para AGREGAR o QUITAR palabras, edita SOLO este arreglo.
+   Se respeta la lista original tal como fue entregada: son 46
+   entradas porque "congratulations" aparece dos veces; la app
+   quita el duplicado automáticamente y practica 45 palabras.
+   ============================================================ */
+var PALABRAS_ORIGEN = [
+  "good afternoon",
+  "Flight attendant",
+  "Businessperson",
+  "responsibility",
+  "congratulations",
+  "hippopotamus",
+  "Fashion designer",
+  "Disappointment",
+  "Administration",
+  "communication",
+  "understanding",
+  "congratulations",   /* repetida en la lista original */
+  "transportation",
+  "Championship",
+  "Biodegradable",
+  "Photosynthesis",
+  "Interconnection",
+  "Microorganism",
+  "environmental",
+  "pronunciation",
+  "introduction",
+  "Professional",
+  "Civilization",
+  "Storytelling",
+  "Handwriting",
+  "Anthropology",
+  "Climatology",
+  "Frustrate",
+  "Beershop",
+  "conclude",
+  "Adventure",
+  "Challenge",
+  "Enough",
+  "Economic",
+  "Evaluation",
+  "Familiarity",
+  "Feature",
+  "Festival",
+  "Freeze",
+  "tomorrow",
+  "between",
+  "achievement",
+  "Swimming",
+  "Saxophone",
+  "skateboard",
+  "Chapter"
+];
+
+/* Normaliza para comparar: minúsculas, sin espacios sobrantes. */
+function norm(txt){
+  return String(txt).toLowerCase().replace(/\s+/g," ").trim();
+}
+
+/* Quita duplicados conservando la primera aparición (y su capitalización). */
+function sinDuplicados(lista){
+  var vistas = {}, fuera = [];
+  for(var i=0;i<lista.length;i++){
+    var clave = norm(lista[i]);
+    if(!clave || vistas[clave]) continue;
+    vistas[clave] = true;
+    fuera.push(String(lista[i]).replace(/\s+/g," ").trim());
+  }
+  return fuera;
+}
+
+var PALABRAS = sinDuplicados(PALABRAS_ORIGEN);   /* 45 palabras únicas */
+var LETRAS_ABC = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+
+/* Cómo se lee cada letra en inglés, escrito "a la española" para que el niño
+   pueda leerlo en voz alta. Mismo orden que LETRAS_ABC.
+   ("zi" porque la voz es en-US; en inglés británico la Z sería "zed".) */
+var SONIDO_ABC = ["ei","bi","si","di","i","ef","yi","eich","ai","yei","kei","el","em",
+                  "en","ou","pi","kiu","ar","es","ti","iu","vi","dábliu","eks","uai","zi"];
+
+/* ============================================================
+   2) VOZ (Web Speech API)
+   Cola secuencial y cancelable. Cada elemento puede traer un
+   callback "alDecir" que se ejecuta cuando esa parte empieza a
+   sonar: es lo que permite ir resaltando letra por letra.
+   ============================================================ */
+var soporteVoz = (typeof window.speechSynthesis !== "undefined" &&
+                  typeof window.SpeechSynthesisUtterance !== "undefined");
+var vozEn = null;             /* voz en inglés elegida */
+var cola = [];                /* pendientes por decir */
+var gen = 0;                  /* "generación": invalida callbacks viejos al cancelar */
+var alTerminarCola = null;    /* limpieza: corre al terminar Y al cancelar */
+
+/* Busca la mejor voz en inglés disponible (en-US primero). */
+function elegirVoz(){
+  if(!soporteVoz) return;
+  var voces = [];
+  try { voces = window.speechSynthesis.getVoices() || []; } catch(e){ voces = []; }
+  var i;
+  for(i=0;i<voces.length;i++){
+    if(voces[i].lang && voces[i].lang.toLowerCase().indexOf("en-us") === 0){ vozEn = voces[i]; return; }
+  }
+  for(i=0;i<voces.length;i++){
+    if(voces[i].lang && voces[i].lang.toLowerCase().indexOf("en") === 0){ vozEn = voces[i]; return; }
+  }
+  /* Si no hay voces cargadas todavía, se queda en null y solo usamos lang="en-US". */
+}
+
+if(soporteVoz){
+  elegirVoz();
+  /* Chrome devuelve la lista vacía en la primera llamada: se recarga al estar lista. */
+  if(typeof window.speechSynthesis.addEventListener === "function"){
+    window.speechSynthesis.addEventListener("voiceschanged", elegirVoz);
+  } else {
+    window.speechSynthesis.onvoiceschanged = elegirVoz;
+  }
+}
+
+/* Ejecuta (una sola vez) la limpieza pendiente de la cola. */
+function correrLimpieza(){
+  var f = alTerminarCola;
+  alTerminarCola = null;      /* se borra antes de llamar para no re-entrar */
+  if(f) f();
+}
+
+/* Corta cualquier audio en curso o pendiente y apaga los resaltados. */
+function detenerVoz(){
+  gen++;
+  cola = [];
+  if(soporteVoz){
+    try { window.speechSynthesis.cancel(); } catch(e){}
+  }
+  correrLimpieza();
+}
+
+/* Dice el siguiente elemento de la cola (g = generación válida). */
+function bombear(g){
+  if(g !== gen) return;                       /* callback de un audio cancelado */
+  var item = cola.shift();
+  if(!item){ correrLimpieza(); return; }      /* cola vacía: terminó todo */
+  var u = new window.SpeechSynthesisUtterance(item.texto);
+  u.lang = "en-US";
+  if(vozEn) u.voice = vozEn;
+  u.rate = item.rate || 1;
+  u.pitch = 1;
+  u.volume = 1;
+  u.onend = function(){ bombear(g); };
+  u.onerror = function(){ bombear(g); };      /* p.ej. "interrupted" al cancelar */
+  if(item.alDecir) item.alDecir();            /* resalta justo antes de sonar */
+  try { window.speechSynthesis.speak(u); } catch(e){}
+}
+
+/* Punto de entrada único: siempre se llama desde un clic del usuario. */
+function hablar(items, alTerminar){
+  if(!soporteVoz || !items || !items.length) return;
+  detenerVoz();
+  cola = items.slice();
+  alTerminarCola = alTerminar || null;
+  bombear(gen);
+}
+
+/* Dice la palabra completa (un poco más lento que lo normal). */
+function decirPalabra(palabra){
+  hablar([{ texto: palabra, rate: 0.85 }]);
+}
+
+/* ---- Resaltado de letras ---- */
+function apagarLetras(spans){
+  if(!spans) return;
+  for(var i=0;i<spans.length;i++){ spans[i].classList.remove("activa"); }
+}
+function resaltarLetra(spans, i){
+  if(!spans || !spans[i]) return;
+  apagarLetras(spans);
+  spans[i].classList.add("activa");
+}
+
+/* Deletrea en voz alta como en un spelling bee real.
+   Si se pasan "spans" (los chips de la palabra en pantalla),
+   va resaltando la letra que está sonando. */
+function deletrearEnVozAlta(palabra, spans){
+  var letras = String(palabra).split("");
+  var items = [{ texto: palabra, rate: 0.85, alDecir: function(){ apagarLetras(spans); } }];
+  for(var i=0;i<letras.length;i++){
+    items.push(itemDeLetra(letras[i], spans, i));
+  }
+  /* Cierra repitiendo la palabra completa, ya sin resaltado. */
+  items.push({ texto: palabra, rate: 0.85, alDecir: function(){ apagarLetras(spans); } });
+  hablar(items, function(){ apagarLetras(spans); });
+}
+
+/* Crea el elemento de cola para una letra (o para un espacio). */
+function itemDeLetra(caracter, spans, i){
+  var esEspacio = (caracter === " ");
+  return {
+    texto: esEspacio ? "space" : caracter.toUpperCase(),
+    rate: esEspacio ? 0.8 : 0.7,
+    alDecir: function(){ resaltarLetra(spans, i); }
+  };
+}
+
+/* ============================================================
+   3) ESTADO DE LA SESIÓN
+   ============================================================ */
+var LS_RACHA = "spellingBee.mejorRacha";
+var LS_NIVEL = "spellingBee.nivel";
+
+function leerLS(clave){
+  try { return window.localStorage.getItem(clave); } catch(e){ return null; }
+}
+function guardarLS(clave, valor){
+  try { window.localStorage.setItem(clave, String(valor)); } catch(e){}
+}
+
+function leerMejorRacha(){
+  var v = parseInt(leerLS(LS_RACHA), 10);
+  return isNaN(v) ? 0 : v;
+}
+function leerNivel(){
+  return (leerLS(LS_NIVEL) === "examen") ? "examen" : "facil";   /* Fácil por defecto */
+}
+
+var estado = {
+  nivel: leerNivel(),   /* "facil" = se ve la palabra | "examen" = solo se escucha */
+  baraja: [],           /* palabras de la ronda, ya barajadas */
+  indice: 0,
+  aciertos: 0,
+  fallos: 0,
+  racha: 0,
+  mejorRachaSesion: 0,
+  mejorRachaHistorica: leerMejorRacha(),
+  falladas: [],
+  respondida: false     /* true cuando la palabra actual ya fue comprobada */
+};
+
+var spansPalabraActual = null;   /* chips de la palabra visible (nivel Fácil) */
+
+/* Baraja una copia del arreglo (Fisher-Yates). */
+function barajar(lista){
+  var a = lista.slice(), i, j, tmp;
+  for(i=a.length-1;i>0;i--){
+    j = Math.floor(Math.random()*(i+1));
+    tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+  }
+  return a;
+}
+
+/* ============================================================
+   4) ATAJOS DE DOM
+   ============================================================ */
+function $(id){ return document.getElementById(id); }
+
+var pantallas = {
+  inicio:   $("pantalla-inicio"),
+  practica: $("pantalla-practica"),
+  resumen:  $("pantalla-resumen"),
+  repaso:   $("pantalla-repaso")
+};
+
+function mostrarPantalla(nombre){
+  detenerVoz();
+  for(var k in pantallas){
+    if(Object.prototype.hasOwnProperty.call(pantallas,k)){
+      pantallas[k].classList.toggle("oculto", k !== nombre);
+    }
+  }
+  window.scrollTo(0,0);
+}
+
+function escaparHTML(txt){
+  return String(txt).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+/* Dibuja la palabra como chips (una caja por carácter) y devuelve
+   el arreglo de <span>, alineado por índice con la palabra.
+   Los espacios también ocupan un chip, así el resaltado coincide. */
+function crearLetras(contenedor, palabra, mini){
+  contenedor.innerHTML = "";
+  var caja = document.createElement("div");
+  caja.className = "letras" + (mini ? " mini" : "");
+  var letras = String(palabra).split("");
+  var spans = [];
+  for(var i=0;i<letras.length;i++){
+    var c = letras[i];
+    var s = document.createElement("span");
+    if(c === " "){
+      s.className = "letra espacio";
+      s.textContent = "␣";
+      s.title = "espacio";
+    } else {
+      var esMayus = (c === c.toUpperCase() && c !== c.toLowerCase());
+      s.className = "letra" + (esMayus ? " mayus" : "");
+      s.textContent = c;
+    }
+    spans.push(s);
+    caja.appendChild(s);
+  }
+  contenedor.appendChild(caja);
+  return spans;
+}
+
+/* ============================================================
+   5) NIVEL
+   FÁCIL  = aprender: ve la palabra y la escucha, sin escribir ni calificación.
+   EXAMEN = evaluarse: la palabra no se ve, la escribe y se califica.
+   ============================================================ */
+var TEXTO_NIVEL = {
+  facil:  "👀 Fácil: ve la palabra, la escucha y la ve deletrear letra por letra. Sin escribir ni calificación.",
+  examen: "🎤 Examen: la palabra no se ve; la escribe y la app la califica (como en el concurso de verdad)."
+};
+
+function aplicarNivel(nivel, redibujar){
+  estado.nivel = (nivel === "examen") ? "examen" : "facil";
+  guardarLS(LS_NIVEL, estado.nivel);
+  var esFacil = (estado.nivel === "facil");
+  $("btn-nivel-facil").classList.toggle("activo", esFacil);
+  $("btn-nivel-examen").classList.toggle("activo", !esFacil);
+  $("nivel-desc").textContent = TEXTO_NIVEL[estado.nivel];
+  $("btn-toggle-nivel").textContent = esFacil ? "👀 Fácil" : "🎤 Examen";
+  $("btn-ir-practica").textContent = esFacil ? "👀 Aprender las palabras" : "🎤 Practicar deletreo";
+  if(redibujar) pintarModoUI();
+}
+
+/* Acomoda la pantalla de practicar según el nivel (sin volver a pronunciar nada):
+   en Fácil se ve la palabra y NO hay campo de escritura, marcador ni calificación. */
+function pintarModoUI(){
+  var esFacil = (estado.nivel === "facil");
+  var palabra = palabraActual();
+
+  /* Palabra visible sólo en Fácil */
+  $("zona-palabra").classList.toggle("oculto", !esFacil);
+  $("aviso-examen").classList.toggle("oculto", esFacil);
+  spansPalabraActual = null;
+  $("palabra-letras").innerHTML = "";
+  $("palabra-texto").textContent = esFacil ? palabra : "";
+  if(esFacil && palabra){
+    spansPalabraActual = crearLetras($("palabra-letras"), palabra, false);
+  }
+
+  /* Escribir, marcador y resultados: sólo en Examen */
+  $("zona-escribir").classList.toggle("oculto", esFacil);
+  $("marcador").classList.toggle("oculto", esFacil);
+  $("btn-terminar").classList.toggle("oculto", esFacil);
+  $("instruccion-practica").textContent = esFacil
+    ? "Mira la palabra, escúchala y deletréala 🔤"
+    : "Escucha la palabra y escríbela 👇";
+
+  if(esFacil){
+    /* En Fácil sólo se avanza: no hay nada que comprobar. */
+    $("btn-comprobar").classList.add("oculto");
+    $("btn-siguiente").classList.remove("oculto");
+    /* Si la palabra ya fue respondida (venimos de Examen) se conserva su
+       feedback; si no, se limpia porque en Fácil no hay calificación. */
+    if(!estado.respondida){
+      $("feedback").className = "feedback";
+      $("feedback").innerHTML = "";
+    }
+  } else {
+    /* En Examen los botones dependen de si la palabra ya fue respondida. */
+    $("btn-comprobar").classList.toggle("oculto", estado.respondida);
+    $("btn-siguiente").classList.toggle("oculto", !estado.respondida);
+  }
+}
+
+/* ============================================================
+   6) MODO PRINCIPAL: PRACTICAR DELETREO
+   ============================================================ */
+function palabraActual(){
+  return estado.baraja[estado.indice] || "";
+}
+
+function iniciarRonda(lista){
+  estado.baraja = barajar(lista && lista.length ? lista : PALABRAS);
+  estado.indice = 0;
+  estado.aciertos = 0;
+  estado.fallos = 0;
+  estado.racha = 0;
+  estado.mejorRachaSesion = 0;
+  estado.falladas = [];
+  mostrarPantalla("practica");
+  pintarPalabra(true);
+}
+
+/* Prepara la interfaz para la palabra actual. Si conAudio=true, la dice. */
+function pintarPalabra(conAudio){
+  estado.respondida = false;
+  $("feedback").className = "feedback";
+  $("feedback").innerHTML = "";
+  $("respuesta").value = "";
+  $("respuesta").disabled = false;
+  $("p-actual").textContent = String(estado.indice + 1);
+  $("p-total").textContent = String(estado.baraja.length);
+  $("barra-relleno").style.width = (estado.indice / estado.baraja.length * 100) + "%";
+  pintarModoUI();
+  actualizarMarcador();
+  /* El foco (y el teclado del celular) sólo tiene sentido si hay dónde escribir. */
+  if(estado.nivel !== "facil"){ try { $("respuesta").focus(); } catch(e){} }
+  if(conAudio) decirPalabra(palabraActual());
+}
+
+function actualizarMarcador(){
+  $("m-aciertos").textContent = String(estado.aciertos);
+  $("m-fallos").textContent = String(estado.fallos);
+  $("m-racha").textContent = String(estado.racha);
+  $("m-mejor").textContent = String(Math.max(estado.mejorRachaHistorica, estado.mejorRachaSesion));
+}
+
+var FELICITACIONES = ["¡Perfecto! 🎉","¡Excelente! 🌟","¡Muy bien! 👏","¡Lo lograste! 🚀","¡Súper! 🐝","¡Increíble! 🏅"];
+var ANIMOS = ["¡Casi! Sigue intentando 💪","No pasa nada, así se aprende 🌱","¡Ánimo! La próxima te sale ✨","Buen intento, mira cómo se escribe 👀"];
+
+function alAzar(lista){ return lista[Math.floor(Math.random()*lista.length)]; }
+
+function comprobar(){
+  if(estado.respondida) return;
+  if(estado.nivel === "facil") return;   /* en Fácil no hay nada que calificar */
+  var escrito = $("respuesta").value;
+  if(norm(escrito) === ""){
+    $("respuesta").focus();
+    return;
+  }
+  var correcta = palabraActual();
+  var acerto = (norm(escrito) === norm(correcta));
+  estado.respondida = true;
+  $("respuesta").disabled = true;
+  $("btn-comprobar").classList.add("oculto");
+  $("btn-siguiente").classList.remove("oculto");
+
+  var fb = $("feedback");
+  if(acerto){
+    estado.aciertos++;
+    estado.racha++;
+    if(estado.racha > estado.mejorRachaSesion) estado.mejorRachaSesion = estado.racha;
+    if(estado.racha > estado.mejorRachaHistorica){
+      estado.mejorRachaHistorica = estado.racha;
+      guardarLS(LS_RACHA, estado.mejorRachaHistorica);
+    }
+    fb.className = "feedback bien";
+    fb.innerHTML =
+      '<p class="titulo-fb">' + escaparHTML(alAzar(FELICITACIONES)) + '</p>' +
+      '<p class="palabra-grande">' + escaparHTML(correcta) + '</p>' +
+      '<p class="nota">Racha: 🔥 ' + estado.racha + '</p>';
+  } else {
+    estado.fallos++;
+    estado.racha = 0;
+    if(estado.falladas.indexOf(correcta) === -1) estado.falladas.push(correcta);
+    fb.className = "feedback mal";
+    fb.innerHTML =
+      '<p class="titulo-fb">Ups... ' + escaparHTML(alAzar(ANIMOS)) + '</p>' +
+      '<p class="escribiste">Escribiste: <strong>' + escaparHTML(escrito.trim() || "(nada)") + '</strong></p>' +
+      '<p style="margin:10px 0 2px;font-weight:800">Se escribe así:</p>' +
+      '<p class="palabra-grande">' + escaparHTML(correcta) + '</p>' +
+      '<div id="fb-letras"></div>' +
+      '<button type="button" id="btn-escuchar-fallo" class="btn-naranja">🔤 Escuchar el deletreo</button>';
+    /* Chips de la palabra correcta: también se resaltan al escuchar el deletreo. */
+    var spansFb = crearLetras($("fb-letras"), correcta, false);
+    $("btn-escuchar-fallo").addEventListener("click", function(){
+      deletrearEnVozAlta(correcta, spansFb);
+    });
+  }
+  actualizarMarcador();
+  $("barra-relleno").style.width = ((estado.indice + 1) / estado.baraja.length * 100) + "%";
+}
+
+function siguiente(){
+  if(estado.indice + 1 >= estado.baraja.length){
+    mostrarResumen();
+    return;
+  }
+  estado.indice++;
+  pintarPalabra(true);   /* dice la nueva palabra (viene de un clic: audio permitido) */
+}
+
+/* ============================================================
+   7) RESUMEN DE LA RONDA
+   ============================================================ */
+function mostrarResumen(){
+  var respondidas = estado.aciertos + estado.fallos;
+  $("r-aciertos").textContent = String(estado.aciertos);
+  $("r-total").textContent = String(respondidas > 0 ? respondidas : estado.baraja.length);
+  $("r-racha").textContent = String(estado.mejorRachaSesion);
+  /* Sin respuestas escritas (nivel Fácil) no hay puntaje que mostrar. */
+  $("bloque-puntaje").classList.toggle("oculto", respondidas === 0);
+
+  var porcentaje = respondidas > 0 ? (estado.aciertos / respondidas) * 100 : 0;
+  var msg, emoji;
+  if(respondidas === 0){ msg = "¡Terminaste de repasar las palabras! 🐝"; emoji = "🎉"; }
+  else if(porcentaje >= 90){ msg = "¡Wow! Estás listo para el Spelling Bee 🏆"; emoji = "🏆"; }
+  else if(porcentaje >= 70){ msg = "¡Muy bien! Un poquito más y quedas perfecto 🌟"; emoji = "🌟"; }
+  else if(porcentaje >= 40){ msg = "¡Buen avance! Repasa las palabras difíciles 💪"; emoji = "💪"; }
+  else { msg = "¡Sigue practicando, vas a mejorar mucho! 🌱"; emoji = "🌱"; }
+  $("mensaje-resumen").textContent = msg;
+  $("abeja-resumen").textContent = emoji;
+
+  var bloque = $("bloque-falladas");
+  var ul = $("lista-falladas");
+  ul.innerHTML = "";
+  if(estado.falladas.length){
+    bloque.classList.remove("oculto");
+    $("btn-repasar-falladas").classList.remove("oculto");
+    for(var i=0;i<estado.falladas.length;i++){
+      (function(palabra){
+        var li = document.createElement("li");
+        var span = document.createElement("span");
+        span.textContent = palabra;
+        var btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "btn-amarillo";
+        btn.textContent = "🔊";
+        btn.setAttribute("aria-label", "Escuchar " + palabra);
+        btn.addEventListener("click", function(){ decirPalabra(palabra); });
+        li.appendChild(span);
+        li.appendChild(btn);
+        ul.appendChild(li);
+      })(estado.falladas[i]);
+    }
+  } else {
+    bloque.classList.add("oculto");
+    $("btn-repasar-falladas").classList.add("oculto");
+  }
+  mostrarPantalla("resumen");
+}
+
+/* ============================================================
+   8) MODO REPASO LIBRE
+   ============================================================ */
+function pintarRepaso(filtro){
+  var grid = $("grid-repaso");
+  grid.innerHTML = "";
+  var f = norm(filtro || "");
+  var mostradas = 0;
+  for(var i=0;i<PALABRAS.length;i++){
+    var palabra = PALABRAS[i];
+    if(f && norm(palabra).indexOf(f) === -1) continue;
+    mostradas++;
+    (function(p){
+      var caja = document.createElement("div");
+      caja.className = "item";
+
+      var titulo = document.createElement("div");
+      titulo.className = "palabra";
+      titulo.textContent = p;
+
+      /* Chips pequeños: se resaltan cuando se escucha el deletreo. */
+      var cajaLetras = document.createElement("div");
+      var spans = crearLetras(cajaLetras, p, true);
+
+      var acciones = document.createElement("div");
+      acciones.className = "acciones";
+
+      var bAudio = document.createElement("button");
+      bAudio.type = "button";
+      bAudio.className = "btn-amarillo";
+      bAudio.textContent = "🔊";
+      bAudio.setAttribute("aria-label", "Escuchar " + p);
+      bAudio.addEventListener("click", function(){ decirPalabra(p); });
+
+      var bLetras = document.createElement("button");
+      bLetras.type = "button";
+      bLetras.className = "btn-naranja";
+      bLetras.textContent = "🔤";
+      bLetras.setAttribute("aria-label", "Deletrear " + p);
+      bLetras.addEventListener("click", function(){ deletrearEnVozAlta(p, spans); });
+
+      acciones.appendChild(bAudio);
+      acciones.appendChild(bLetras);
+      caja.appendChild(titulo);
+      caja.appendChild(cajaLetras);
+      caja.appendChild(acciones);
+      grid.appendChild(caja);
+    })(palabra);
+  }
+  $("sin-resultados").classList.toggle("oculto", mostradas > 0);
+}
+
+/* ============================================================
+   9) PANEL DEL ABECEDARIO (A-Z)
+   ============================================================ */
+var botonesAbc = [];
+var recitandoAbc = false;
+
+function apagarAbc(){
+  for(var i=0;i<botonesAbc.length;i++){ botonesAbc[i].classList.remove("activa"); }
+  recitandoAbc = false;
+  $("btn-abc").textContent = "🎵 Decir el abecedario";
+}
+function resaltarAbc(i){
+  for(var k=0;k<botonesAbc.length;k++){ botonesAbc[k].classList.remove("activa"); }
+  if(botonesAbc[i]) botonesAbc[i].classList.add("activa");
+}
+
+function construirAbc(){
+  var grid = $("abc-grid");
+  for(var i=0;i<LETRAS_ABC.length;i++){
+    (function(letra, idx){
+      var sonido = SONIDO_ABC[idx] || "";
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "btn-letra";
+
+      /* Dos líneas: la letra grande y, debajo, cómo se pronuncia. */
+      var eLetra = document.createElement("span");
+      eLetra.className = "abc-l";
+      eLetra.textContent = letra;
+      var eSonido = document.createElement("span");
+      eSonido.className = "abc-s";
+      eSonido.textContent = sonido;
+      b.appendChild(eLetra);
+      b.appendChild(eSonido);
+
+      b.title = letra + " se dice " + sonido;
+      b.setAttribute("aria-label", "Escuchar la letra " + letra + ", se dice " + sonido);
+      b.disabled = !soporteVoz;
+      b.addEventListener("click", function(){
+        hablar([{ texto: letra, rate: 0.75, alDecir: function(){ resaltarAbc(idx); } }], apagarAbc);
+      });
+      botonesAbc.push(b);
+      grid.appendChild(b);
+    })(LETRAS_ABC[i], i);
+  }
+}
+
+function decirAbecedario(){
+  var items = [];
+  for(var i=0;i<LETRAS_ABC.length;i++){
+    (function(idx){
+      items.push({
+        texto: LETRAS_ABC[idx],
+        rate: 0.75,
+        alDecir: function(){ resaltarAbc(idx); }
+      });
+    })(i);
+  }
+  hablar(items, apagarAbc);
+  /* El texto del botón se cambia DESPUÉS de hablar(): hablar() cancela el audio
+     anterior y eso dispara la limpieza, que restaura este mismo texto. */
+  if(soporteVoz){
+    recitandoAbc = true;
+    $("btn-abc").textContent = "⏹ Parar";
+  }
+}
+
+/* ============================================================
+   10) EVENTOS
+   ============================================================ */
+$("total-inicio").textContent = String(PALABRAS.length);
+construirAbc();
+aplicarNivel(estado.nivel, false);
+
+$("btn-nivel-facil").addEventListener("click", function(){ aplicarNivel("facil", true); });
+$("btn-nivel-examen").addEventListener("click", function(){ aplicarNivel("examen", true); });
+$("btn-toggle-nivel").addEventListener("click", function(){
+  detenerVoz();
+  aplicarNivel(estado.nivel === "facil" ? "examen" : "facil", true);
+});
+
+$("btn-ir-practica").addEventListener("click", function(){ iniciarRonda(PALABRAS); });
+$("btn-ir-repaso").addEventListener("click", function(){
+  mostrarPantalla("repaso");
+  $("filtro").value = "";
+  pintarRepaso("");
+});
+
+$("btn-escuchar").addEventListener("click", function(){ decirPalabra(palabraActual()); });
+$("btn-repetir").addEventListener("click", function(){ decirPalabra(palabraActual()); });
+$("btn-deletrear").addEventListener("click", function(){
+  deletrearEnVozAlta(palabraActual(), spansPalabraActual);
+});
+$("btn-comprobar").addEventListener("click", comprobar);
+$("btn-siguiente").addEventListener("click", siguiente);
+
+/* Enter dentro del input: comprobar o pasar a la siguiente. */
+$("respuesta").addEventListener("keydown", function(ev){
+  if(ev.key === "Enter" || ev.keyCode === 13){
+    ev.preventDefault();
+    if(estado.respondida) siguiente(); else comprobar();
+  }
+});
+
+$("btn-salir-practica").addEventListener("click", function(){ mostrarPantalla("inicio"); });
+$("btn-terminar").addEventListener("click", mostrarResumen);
+$("btn-otra-vez").addEventListener("click", function(){ iniciarRonda(PALABRAS); });
+$("btn-repasar-falladas").addEventListener("click", function(){
+  var lista = estado.falladas.slice();
+  if(lista.length) iniciarRonda(lista);
+});
+$("btn-salir-resumen").addEventListener("click", function(){ mostrarPantalla("inicio"); });
+$("btn-salir-repaso").addEventListener("click", function(){ mostrarPantalla("inicio"); });
+$("filtro").addEventListener("input", function(){ pintarRepaso($("filtro").value); });
+
+$("btn-abc").addEventListener("click", function(){
+  if(recitandoAbc) detenerVoz(); else decirAbecedario();
+});
+
+/* Si el navegador no soporta voz, se avisa y se apagan los botones de audio. */
+if(!soporteVoz){
+  $("aviso-voz").classList.remove("oculto");
+  var botonesAudio = ["btn-escuchar","btn-repetir","btn-deletrear","btn-abc"];
+  for(var i=0;i<botonesAudio.length;i++){ $(botonesAudio[i]).disabled = true; }
+}
+
+/* Al cerrar o recargar la página se corta cualquier audio pendiente. */
+window.addEventListener("beforeunload", function(){ detenerVoz(); });
+
+actualizarMarcador();
+
+})();
+</script>
+</body>
+</html>
