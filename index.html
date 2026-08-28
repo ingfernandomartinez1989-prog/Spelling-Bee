@@ -127,7 +127,7 @@ button[disabled]{opacity:.45;cursor:not-allowed;box-shadow:none;}
 .abeja.animada{animation:flotar 2.2s ease-in-out infinite;}
 @keyframes flotar{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
 
-/* ---------- Palabra visible (nivel Fácil) ---------- */
+/* ---------- Palabra visible (nivel Practicar) ---------- */
 #zona-palabra{
   background:#fbfaff;border:3px dashed #e2d8f8;border-radius:18px;
   padding:10px 8px 12px;margin-bottom:14px;
@@ -272,14 +272,14 @@ input[type="text"]:focus{outline:none;border-color:var(--morado-claro);backgroun
 
       <p class="nivel-titulo">Elige el nivel:</p>
       <div class="fila-botones">
-        <button id="btn-nivel-facil" class="btn-nivel">👀 Fácil</button>
+        <button id="btn-nivel-facil" class="btn-nivel">👀 Practicar</button>
         <button id="btn-nivel-examen" class="btn-nivel">🎤 Examen</button>
       </div>
       <p id="nivel-desc" class="nivel-desc"></p>
 
       <p class="centrado" style="color:var(--gris)">🔈 Sube el volumen antes de empezar.</p>
       <div style="display:flex;flex-direction:column;gap:12px;margin-top:8px">
-        <button id="btn-ir-practica" class="btn-grande btn-amarillo">🎤 Practicar deletreo</button>
+        <button id="btn-ir-practica" class="btn-grande btn-amarillo">▶️ Empezar a practicar</button>
         <button id="btn-ir-repaso" class="btn-grande btn-claro">📖 Repaso libre</button>
       </div>
     </section>
@@ -298,13 +298,13 @@ input[type="text"]:focus{outline:none;border-color:var(--morado-claro);backgroun
         <div class="barra"><span id="barra-relleno"></span></div>
 
         <div class="fila-derecha">
-          <button id="btn-toggle-nivel" class="btn-claro btn-mini">👀 Fácil</button>
+          <button id="btn-toggle-nivel" class="btn-claro btn-mini">👀 Practicar</button>
         </div>
 
         <span class="abeja" id="abeja-practica">🐝</span>
         <p class="instruccion" id="instruccion-practica">Escucha la palabra y escríbela 👇</p>
 
-        <!-- La palabra se ve sólo en nivel Fácil -->
+        <!-- La palabra se ve sólo en nivel Practicar -->
         <div id="zona-palabra">
           <p id="palabra-texto" class="palabra-grande"></p>
           <div id="palabra-letras"></div>
@@ -617,7 +617,7 @@ function leerMejorRacha(){
   return isNaN(v) ? 0 : v;
 }
 function leerNivel(){
-  return (leerLS(LS_NIVEL) === "examen") ? "examen" : "facil";   /* Fácil por defecto */
+  return (leerLS(LS_NIVEL) === "examen") ? "examen" : "facil";   /* Practicar por defecto */
 }
 
 var estado = {
@@ -633,7 +633,7 @@ var estado = {
   respondida: false     /* true cuando la palabra actual ya fue comprobada */
 };
 
-var spansPalabraActual = null;   /* chips de la palabra visible (nivel Fácil) */
+var spansPalabraActual = null;   /* chips de la palabra visible (nivel Practicar) */
 
 /* Baraja una copia del arreglo (Fisher-Yates). */
 function barajar(lista){
@@ -701,11 +701,13 @@ function crearLetras(contenedor, palabra, mini){
 
 /* ============================================================
    5) NIVEL
-   FÁCIL  = aprender: ve la palabra y la escucha, sin escribir ni calificación.
-   EXAMEN = evaluarse: la palabra no se ve, la escribe y se califica.
+   Internamente los niveles se llaman "facil" y "examen"; en pantalla
+   se muestran como "👀 Practicar" y "🎤 Examen".
+   "facil"  = practicar: ve la palabra y la escucha, sin escribir ni calificación.
+   "examen" = evaluarse: la palabra no se ve, la escribe y se califica.
    ============================================================ */
 var TEXTO_NIVEL = {
-  facil:  "👀 Fácil: ve la palabra, la escucha y la ve deletrear letra por letra. Sin escribir ni calificación.",
+  facil:  "👀 Practicar: ve la palabra, la escucha y la ve deletrear letra por letra. Sin escribir ni calificación.",
   examen: "🎤 Examen: la palabra no se ve; la escribe y la app la califica (como en el concurso de verdad)."
 };
 
@@ -716,18 +718,18 @@ function aplicarNivel(nivel, redibujar){
   $("btn-nivel-facil").classList.toggle("activo", esFacil);
   $("btn-nivel-examen").classList.toggle("activo", !esFacil);
   $("nivel-desc").textContent = TEXTO_NIVEL[estado.nivel];
-  $("btn-toggle-nivel").textContent = esFacil ? "👀 Fácil" : "🎤 Examen";
-  $("btn-ir-practica").textContent = esFacil ? "👀 Aprender las palabras" : "🎤 Practicar deletreo";
+  $("btn-toggle-nivel").textContent = esFacil ? "👀 Practicar" : "🎤 Examen";
+  $("btn-ir-practica").textContent = esFacil ? "▶️ Empezar a practicar" : "🎤 Empezar el examen";
   if(redibujar) pintarModoUI();
 }
 
 /* Acomoda la pantalla de practicar según el nivel (sin volver a pronunciar nada):
-   en Fácil se ve la palabra y NO hay campo de escritura, marcador ni calificación. */
+   en Practicar se ve la palabra y NO hay campo de escritura, marcador ni calificación. */
 function pintarModoUI(){
   var esFacil = (estado.nivel === "facil");
   var palabra = palabraActual();
 
-  /* Palabra visible sólo en Fácil */
+  /* Palabra visible sólo en Practicar */
   $("zona-palabra").classList.toggle("oculto", !esFacil);
   $("aviso-examen").classList.toggle("oculto", esFacil);
   spansPalabraActual = null;
@@ -746,11 +748,11 @@ function pintarModoUI(){
     : "Escucha la palabra y escríbela 👇";
 
   if(esFacil){
-    /* En Fácil sólo se avanza: no hay nada que comprobar. */
+    /* En Practicar sólo se avanza: no hay nada que comprobar. */
     $("btn-comprobar").classList.add("oculto");
     $("btn-siguiente").classList.remove("oculto");
     /* Si la palabra ya fue respondida (venimos de Examen) se conserva su
-       feedback; si no, se limpia porque en Fácil no hay calificación. */
+       feedback; si no, se limpia porque en Practicar no hay calificación. */
     if(!estado.respondida){
       $("feedback").className = "feedback";
       $("feedback").innerHTML = "";
@@ -812,7 +814,7 @@ function alAzar(lista){ return lista[Math.floor(Math.random()*lista.length)]; }
 
 function comprobar(){
   if(estado.respondida) return;
-  if(estado.nivel === "facil") return;   /* en Fácil no hay nada que calificar */
+  if(estado.nivel === "facil") return;   /* en Practicar no hay nada que calificar */
   var escrito = $("respuesta").value;
   if(norm(escrito) === ""){
     $("respuesta").focus();
@@ -878,7 +880,7 @@ function mostrarResumen(){
   $("r-aciertos").textContent = String(estado.aciertos);
   $("r-total").textContent = String(respondidas > 0 ? respondidas : estado.baraja.length);
   $("r-racha").textContent = String(estado.mejorRachaSesion);
-  /* Sin respuestas escritas (nivel Fácil) no hay puntaje que mostrar. */
+  /* Sin respuestas escritas (nivel Practicar) no hay puntaje que mostrar. */
   $("bloque-puntaje").classList.toggle("oculto", respondidas === 0);
 
   var porcentaje = respondidas > 0 ? (estado.aciertos / respondidas) * 100 : 0;

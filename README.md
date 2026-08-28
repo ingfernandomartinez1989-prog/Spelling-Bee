@@ -5,10 +5,10 @@ App web estática (un solo `index.html`) para que un niño de 10 años practique
 
 ## Qué incluye
 
-- **🎤 Practicar deletreo** (modo principal): la app dice la palabra en voz alta (`en-US`), el niño la
+- **Deletreo con voz** (modo principal): la app dice la palabra en voz alta (`en-US`), el niño la
   escribe y recibe feedback inmediato. Si falla, muestra la palabra deletreada letra por letra.
 - **Dos niveles**, elegibles en Inicio y cambiables a mitad de ronda con el botón de arriba:
-  - `👀 Fácil` (aprender) — la palabra se ve en pantalla y se escucha. **Sin escribir ni
+  - `👀 Practicar` — la palabra se ve en pantalla y se escucha. **Sin escribir ni
     calificación**: sólo mirar, oír y avanzar.
   - `🎤 Examen` (evaluarse) — la palabra no se ve; el niño la escribe y la app la califica,
     con marcador y racha (como en el concurso real).
